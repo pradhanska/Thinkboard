@@ -237,12 +237,32 @@
   pointer-events: none;
 }
 
-/* White: clean modern card with crisp shadow */
+/* White: transparent sticker — frosted vinyl with glossy edge & subtle highlight */
 .theme-white .note-card {
-  border: 1px solid oklch(0.9 0.01 250);
+  background:
+    linear-gradient(135deg, oklch(1 0 0 / 0.55) 0%, oklch(1 0 0 / 0.25) 100%);
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  border: 1px solid oklch(1 0 0 / 0.7);
   box-shadow:
-    0 1px 2px oklch(0.2 0.02 250 / 0.06),
-    0 8px 24px -10px oklch(0.2 0.02 250 / 0.18);
+    0 1px 0 oklch(1 0 0 / 0.9) inset,
+    0 -1px 0 oklch(0.6 0.02 250 / 0.15) inset,
+    0 2px 4px oklch(0.2 0.02 250 / 0.08),
+    0 12px 28px -10px oklch(0.2 0.02 250 / 0.22);
+}
+.theme-white .note-card::after {
+  /* glossy sheen across the top */
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    160deg,
+    oklch(1 0 0 / 0.45) 0%,
+    oklch(1 0 0 / 0.05) 35%,
+    transparent 60%
+  );
+  pointer-events: none;
 }
 
 /* Cyber: glassy panel with neon edge */
