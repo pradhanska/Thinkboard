@@ -74,6 +74,11 @@ export function Softboard() {
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.target !== e.currentTarget) return;
     setSelectedConn(null);
+    if (connectMode) {
+      // Clicking empty board in connect mode resets the in-progress connection.
+      setConnectFrom(null);
+      return;
+    }
     if (e.button === 1 || e.button === 2 || e.shiftKey || e.button === 0) {
       isPanning.current = true;
       panStart.current = {
