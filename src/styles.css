@@ -323,25 +323,25 @@
 }
 
 /* ============ CONNECTIONS (theme-aware) ============ */
-/* Cork: braided red string — twisted texture via dashes + soft shadow */
+/* Cork: smooth twine string with soft drop shadow */
 .theme-cork .connection-string {
   stroke-linecap: round;
-  filter:
-    drop-shadow(0 2px 1.5px oklch(0 0 0 / 0.45))
-    drop-shadow(0 4px 6px oklch(0 0 0 / 0.3));
-  stroke-dasharray: 3 1.5;
+  filter: drop-shadow(0 2px 1.5px oklch(0 0 0 / 0.4));
 }
 .theme-cork .connection-string-base {
   stroke-linecap: round;
-  filter: drop-shadow(0 3px 3px oklch(0 0 0 / 0.4));
+  filter: drop-shadow(0 4px 5px oklch(0 0 0 / 0.45));
+  opacity: 0.95;
 }
 
-/* White: marker pen — slightly textured ink */
+/* White: marker pen — slightly uneven, soft ink bleed */
 .theme-white .connection-string {
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 1px 0.5px oklch(0 0 0 / 0.12));
-  opacity: 0.92;
+  filter:
+    drop-shadow(0 0 0.4px currentColor)
+    drop-shadow(0 1px 0.5px oklch(0 0 0 / 0.15));
+  opacity: 0.88;
 }
 
 /* Cyber: laser beam with intense glow */
