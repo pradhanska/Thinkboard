@@ -1,26 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Softboard } from "@/components/softboard/Softboard";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/")({
   component: Index,
+  head: () => ({
+    meta: [
+      { title: "Softboard — Your personal pinboard" },
+      {
+        name: "description",
+        content:
+          "Softboard is a local-first corkboard for notes, images, audio and documents. Connect ideas with colored strings. Save and load your board as a file.",
+      },
+      { property: "og:title", content: "Softboard — Your personal pinboard" },
+      {
+        property: "og:description",
+        content:
+          "Pin notes, images, audio and docs. Connect them with colored strings. Save locally to your PC.",
+      },
+    ],
+  }),
 });
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
-
 function Index() {
-  return <PlaceholderIndex />;
+  return (
+    <>
+      <Softboard />
+      <Toaster position="bottom-right" />
+    </>
+  );
 }
