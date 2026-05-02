@@ -117,7 +117,12 @@ export function BoardItemView({
       {/* Pin */}
       <div
         className="pin absolute"
-        style={{ top: -10, left: "50%", transform: "translateX(-50%)" }}
+        style={{
+          top: -10,
+          left: "50%",
+          transform: "translateX(-50%)",
+          ["--pin-image" as string]: `url(${pinRed})`,
+        }}
       />
 
       {/* Hover toolbar */}
