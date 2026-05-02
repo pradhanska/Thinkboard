@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   DEFAULT_STATE,
-  STRING_COLORS,
   colorVar,
   type BoardItem,
   type Connection,

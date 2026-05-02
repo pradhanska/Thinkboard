@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { BoardItem } from "@/lib/softboard-types";
-import { Trash2, Link2, FileText, Music, Image as ImageIcon } from "lucide-react";
+import { Trash2, Link2, FileText, Music } from "lucide-react";
 
 interface Props {
   item: BoardItem;
