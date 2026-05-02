@@ -312,24 +312,76 @@ export function Softboard() {
               const y1 = pa.y - bounds.minY;
               const x2 = pb.x - bounds.minX;
               const y2 = pb.y - bounds.minY;
+              const dist = Math.hypot(x2 - x1, y2 - y1);
+              const sag = Math.min(80, dist * 0.15);
               const mx = (x1 + x2) / 2;
-              const my = (y1 + y2) / 2 + 20;
+              const my =
+                (y1 + y2) / 2 +
+                (state.theme === "cork" ? sag : state.theme === "cyber" ? 0 : 12);
               const isSel = selectedConn === c.id;
+              const stroke = colorVar(c.color);
+              const d = `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;
+              const baseW = isSel ? 5 : 3;
+              const onClick = (e: React.MouseEvent) => {
+                e.stopPropagation();
+                setSelectedConn(c.id);
+              };
               return (
-                <g key={c.id} style={{ pointerEvents: "auto" }}>
-                  <path
-                    className="connection-string"
-                    d={`M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`}
-                    stroke={colorVar(c.color)}
-                    strokeWidth={isSel ? 4.5 : 2.5}
-                    fill="none"
-                    strokeLinecap="round"
-                    style={{ color: colorVar(c.color), cursor: "pointer" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedConn(c.id);
-                    }}
-                  />
+                <g key={c.id} style={{ pointerEvents: "auto", color: stroke }}>
+                  {state.theme === "cork" && (
+                    <>
+                      <path
+                        className="connection-string-base"
+                        d={d}
+                        stroke={stroke}
+                        strokeWidth={baseW + 1.5}
+                        fill="none"
+                        strokeLinecap="round"
+                        opacity={0.9}
+                      />
+                      <path
+                        className="connection-string"
+                        d={d}
+                        stroke={stroke}
+                        strokeWidth={baseW}
+                        fill="none"
+                        style={{ cursor: "pointer" }}
+                        onClick={onClick}
+                      />
+                    </>
+                  )}
+                  {state.theme === "white" && (
+                    <path
+                      className="connection-string"
+                      d={d}
+                      stroke={stroke}
+                      strokeWidth={baseW + 0.5}
+                      fill="none"
+                      style={{ cursor: "pointer" }}
+                      onClick={onClick}
+                    />
+                  )}
+                  {state.theme === "cyber" && (
+                    <>
+                      <path
+                        className="connection-string"
+                        d={d}
+                        stroke={stroke}
+                        strokeWidth={baseW + 1}
+                        fill="none"
+                        opacity={0.9}
+                        style={{ cursor: "pointer" }}
+                        onClick={onClick}
+                      />
+                      <path
+                        className="connection-string-core"
+                        d={d}
+                        strokeWidth={1.2}
+                        fill="none"
+                        style={{ pointerEvents: "none" }}
+                      />
+                    </>
+                  )}
                   {isSel && (
                     <g
                       transform={`translate(${mx}, ${my - 18})`}
