@@ -288,29 +288,15 @@
   pointer-events: none;
 }
 
-/* Cork: realistic 3D thumbtack with metallic shine */
+/* Cork: real photographic thumbtack */
 .theme-cork .pin {
-  width: 20px;
-  height: 20px;
-  border-radius: 9999px;
-  background:
-    radial-gradient(circle at 32% 28%, oklch(1 0.02 30) 0%, oklch(0.85 0.12 28) 18%, var(--pin-color) 55%, oklch(0.32 0.12 25) 95%);
-  box-shadow:
-    0 1px 0 oklch(1 0 0 / 0.5) inset,
-    -1px -1px 2px oklch(0 0 0 / 0.3) inset,
-    0 4px 6px oklch(0 0 0 / 0.5),
-    0 1px 2px oklch(0 0 0 / 0.4);
-}
-.theme-cork .pin::after {
-  content: "";
-  position: absolute;
-  top: 18%;
-  left: 22%;
-  width: 30%;
-  height: 25%;
-  border-radius: 9999px;
-  background: radial-gradient(ellipse, oklch(1 0 0 / 0.85), transparent 70%);
-  filter: blur(0.5px);
+  width: 26px;
+  height: 26px;
+  background-image: url("/src/assets/pin-red.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  filter: drop-shadow(0 4px 4px oklch(0 0 0 / 0.45));
 }
 
 /* White: minimal magnet dot */
