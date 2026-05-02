@@ -122,11 +122,10 @@ export function Softboard() {
       const world = screenToWorld(cx + (Math.random() - 0.5) * 80, cy + (Math.random() - 0.5) * 80);
       const item: BoardItem = {
         id: uid(),
-        kind: partial.kind,
         x: world.x - 110,
         y: world.y - 80,
-        w: partial.w ?? 220,
-        h: partial.h ?? 160,
+        w: 220,
+        h: 160,
         rotation: (Math.random() - 0.5) * 6,
         ...partial,
       };
