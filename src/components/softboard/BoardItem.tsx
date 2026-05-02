@@ -184,8 +184,8 @@ export function BoardItemView({
         )}
 
         {item.kind === "image" && !item.dataUrl && (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <ImageIcon />
+          <div className="flex-1 flex items-center justify-center text-muted-foreground text-xs">
+            No image
           </div>
         )}
       </div>
