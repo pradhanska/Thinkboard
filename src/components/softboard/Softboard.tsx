@@ -31,6 +31,7 @@ export function Softboard() {
   const [activeStringColor, setActiveStringColor] = useState<StringColor>("red");
   const [connectMode, setConnectMode] = useState(false);
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
+  const [cursorWorld, setCursorWorld] = useState<{ x: number; y: number } | null>(null);
   const [selectedConn, setSelectedConn] = useState<string | null>(null);
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -92,6 +93,9 @@ export function Softboard() {
     }
   };
   const onPointerMove = (e: React.PointerEvent) => {
+    if (connectMode && connectFrom) {
+      setCursorWorld(screenToWorld(e.clientX, e.clientY));
+    }
     if (!isPanning.current) return;
     const dx = e.clientX - panStart.current.x;
     const dy = e.clientY - panStart.current.y;
@@ -163,6 +167,7 @@ export function Softboard() {
       }
       if (connectFrom === id) {
         setConnectFrom(null);
+        setCursorWorld(null);
         return;
       }
       const conn: Connection = {
@@ -173,6 +178,7 @@ export function Softboard() {
       };
       setState((s) => ({ ...s, connections: [...s.connections, conn] }));
       setConnectFrom(null);
+      setCursorWorld(null);
     },
     [connectMode, connectFrom, activeStringColor]
   );
@@ -246,11 +252,23 @@ export function Softboard() {
   const svgW = bounds.maxX - bounds.minX;
   const svgH = bounds.maxY - bounds.minY;
 
-  // Anchor at the top-center pin of the card
-  const pinAnchor = (it: BoardItem) => ({
-    x: it.x + it.w / 2,
-    y: it.y - 2,
-  });
+  // Anchor at the actual pin head — accounts for the card's rotation,
+  // since the pin is positioned at top-center of the rotated card.
+  const pinAnchor = (it: BoardItem) => {
+    const cx = it.x + it.w / 2;
+    const cy = it.y + it.h / 2;
+    // Pin sits 10px above the top edge, centered horizontally.
+    // Local offset from card center, before rotation:
+    const lx = 0;
+    const ly = -(it.h / 2) - 10;
+    const rad = ((it.rotation ?? 0) * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    return {
+      x: cx + lx * cos - ly * sin,
+      y: cy + lx * sin + ly * cos,
+    };
+  };
 
   const onSetTheme = (t: ThemeName) => setState((s) => ({ ...s, theme: t }));
   const onAddSketch = () =>
@@ -442,6 +460,26 @@ export function Softboard() {
                 </g>
               );
             })}
+            {connectMode && connectFrom && cursorWorld && (() => {
+              const a = state.items.find((i) => i.id === connectFrom);
+              if (!a) return null;
+              const pa = pinAnchor(a);
+              const x1 = pa.x - bounds.minX;
+              const y1 = pa.y - bounds.minY;
+              const x2 = cursorWorld.x - bounds.minX;
+              const y2 = cursorWorld.y - bounds.minY;
+              return (
+                <path
+                  d={`M ${x1} ${y1} L ${x2} ${y2}`}
+                  stroke={colorVar(activeStringColor)}
+                  strokeWidth={2.5}
+                  strokeDasharray="6 6"
+                  fill="none"
+                  opacity={0.7}
+                  pointerEvents="none"
+                />
+              );
+            })()}
           </svg>
 
           {/* Items */}
