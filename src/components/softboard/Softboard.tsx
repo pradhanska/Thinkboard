@@ -31,6 +31,7 @@ export function Softboard() {
   const [activeStringColor, setActiveStringColor] = useState<StringColor>("red");
   const [connectMode, setConnectMode] = useState(false);
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
+  const [cursorWorld, setCursorWorld] = useState<{ x: number; y: number } | null>(null);
   const [selectedConn, setSelectedConn] = useState<string | null>(null);
 
   const boardRef = useRef<HTMLDivElement>(null);
