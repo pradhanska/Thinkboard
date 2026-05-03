@@ -246,11 +246,23 @@ export function Softboard() {
   const svgW = bounds.maxX - bounds.minX;
   const svgH = bounds.maxY - bounds.minY;
 
-  // Anchor at the top-center pin of the card
-  const pinAnchor = (it: BoardItem) => ({
-    x: it.x + it.w / 2,
-    y: it.y - 2,
-  });
+  // Anchor at the actual pin head — accounts for the card's rotation,
+  // since the pin is positioned at top-center of the rotated card.
+  const pinAnchor = (it: BoardItem) => {
+    const cx = it.x + it.w / 2;
+    const cy = it.y + it.h / 2;
+    // Pin sits 10px above the top edge, centered horizontally.
+    // Local offset from card center, before rotation:
+    const lx = 0;
+    const ly = -(it.h / 2) - 10;
+    const rad = ((it.rotation ?? 0) * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    return {
+      x: cx + lx * cos - ly * sin,
+      y: cy + lx * sin + ly * cos,
+    };
+  };
 
   const onSetTheme = (t: ThemeName) => setState((s) => ({ ...s, theme: t }));
   const onAddSketch = () =>
