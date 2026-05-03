@@ -336,18 +336,19 @@ export function Softboard() {
               const a = state.items.find((i) => i.id === c.from);
               const b = state.items.find((i) => i.id === c.to);
               if (!a || !b) return null;
-              const pa = itemCenter(a);
-              const pb = itemCenter(b);
+              const pa = pinAnchor(a);
+              const pb = pinAnchor(b);
               const x1 = pa.x - bounds.minX;
               const y1 = pa.y - bounds.minY;
               const x2 = pb.x - bounds.minX;
               const y2 = pb.y - bounds.minY;
               const dist = Math.hypot(x2 - x1, y2 - y1);
-              const sag = Math.min(80, dist * 0.15);
+              const themeSag =
+                state.theme === "cork" ? 0.18 : state.theme === "white" ? 0.04 : 0;
+              const sagFactor = c.sag ?? themeSag;
+              const sag = Math.min(140, dist * sagFactor);
               const mx = (x1 + x2) / 2;
-              const my =
-                (y1 + y2) / 2 +
-                (state.theme === "cork" ? sag : state.theme === "cyber" ? 0 : 12);
+              const my = (y1 + y2) / 2 + sag;
               const isSel = selectedConn === c.id;
               const stroke = colorVar(c.color);
               const d = `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;
