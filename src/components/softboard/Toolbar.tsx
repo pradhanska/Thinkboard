@@ -16,6 +16,7 @@ import {
   Trash,
   Palette,
   ChevronDown,
+  Pencil,
 } from "lucide-react";
 
 interface Props {
@@ -25,6 +26,7 @@ interface Props {
   onAddImage: () => void;
   onAddAudio: () => void;
   onAddDocument: () => void;
+  onAddSketch: () => void;
   onExport: () => void;
   onImport: (file: File) => void;
   onClear: () => void;
@@ -61,6 +63,7 @@ export function Toolbar(p: Props) {
       <Sep />
 
       <Btn onClick={p.onAddNote} icon={<StickyNote size={14} />} label="Note" />
+      <Btn onClick={p.onAddSketch} icon={<Pencil size={14} />} label="Sketch" />
       <Btn onClick={p.onAddImage} icon={<ImageIcon size={14} />} label="Image" />
       <Btn onClick={p.onAddAudio} icon={<Music size={14} />} label="Audio" />
       <Btn onClick={p.onAddDocument} icon={<FileText size={14} />} label="Doc" />
