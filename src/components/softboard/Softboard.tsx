@@ -458,6 +458,26 @@ export function Softboard() {
                 </g>
               );
             })}
+            {connectMode && connectFrom && cursorWorld && (() => {
+              const a = state.items.find((i) => i.id === connectFrom);
+              if (!a) return null;
+              const pa = pinAnchor(a);
+              const x1 = pa.x - bounds.minX;
+              const y1 = pa.y - bounds.minY;
+              const x2 = cursorWorld.x - bounds.minX;
+              const y2 = cursorWorld.y - bounds.minY;
+              return (
+                <path
+                  d={`M ${x1} ${y1} L ${x2} ${y2}`}
+                  stroke={colorVar(activeStringColor)}
+                  strokeWidth={2.5}
+                  strokeDasharray="6 6"
+                  fill="none"
+                  opacity={0.7}
+                  pointerEvents="none"
+                />
+              );
+            })()}
           </svg>
 
           {/* Items */}
