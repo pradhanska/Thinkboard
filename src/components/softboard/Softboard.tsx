@@ -18,6 +18,7 @@ import {
 } from "@/lib/softboard-storage";
 import { BoardItemView } from "./BoardItem";
 import { Toolbar } from "./Toolbar";
+import { ThreadControls } from "./ThreadControls";
 import { toast } from "sonner";
 
 function uid() {
@@ -245,12 +246,27 @@ export function Softboard() {
   const svgW = bounds.maxX - bounds.minX;
   const svgH = bounds.maxY - bounds.minY;
 
-  const itemCenter = (it: BoardItem) => ({
+  // Anchor at the top-center pin of the card
+  const pinAnchor = (it: BoardItem) => ({
     x: it.x + it.w / 2,
-    y: it.y + it.h / 2,
+    y: it.y - 2,
   });
 
   const onSetTheme = (t: ThemeName) => setState((s) => ({ ...s, theme: t }));
+  const onAddSketch = () =>
+    addItem({ kind: "sketch", w: 320, h: 240, strokes: [] });
+
+  const updateConnection = (id: string, patch: Partial<Connection>) =>
+    setState((s) => ({
+      ...s,
+      connections: s.connections.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }));
+  const deleteConnection = (id: string) => {
+    setState((s) => ({ ...s, connections: s.connections.filter((c) => c.id !== id) }));
+    setSelectedConn(null);
+  };
+
+  const selected = state.connections.find((c) => c.id === selectedConn) ?? null;
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -261,6 +277,7 @@ export function Softboard() {
         onAddImage={() => pickFiles("image/*", (fl) => onAddFiles(fl, "image"))}
         onAddAudio={() => pickFiles("audio/*", (fl) => onAddFiles(fl, "audio"))}
         onAddDocument={() => pickFiles("*/*", (fl) => onAddFiles(fl, "document"))}
+        onAddSketch={onAddSketch}
         onExport={onExport}
         onImport={(f) => onImport(f)}
         onClear={onClear}
@@ -275,6 +292,15 @@ export function Softboard() {
         onZoomReset={() => setState((s) => ({ ...s, zoom: 1, pan: { x: 0, y: 0 } }))}
         itemCount={state.items.length}
       />
+
+      {selected && (
+        <ThreadControls
+          conn={selected}
+          onChange={(patch) => updateConnection(selected.id, patch)}
+          onDelete={() => deleteConnection(selected.id)}
+          onClose={() => setSelectedConn(null)}
+        />
+      )}
 
       <div
         ref={boardRef}
@@ -311,18 +337,19 @@ export function Softboard() {
               const a = state.items.find((i) => i.id === c.from);
               const b = state.items.find((i) => i.id === c.to);
               if (!a || !b) return null;
-              const pa = itemCenter(a);
-              const pb = itemCenter(b);
+              const pa = pinAnchor(a);
+              const pb = pinAnchor(b);
               const x1 = pa.x - bounds.minX;
               const y1 = pa.y - bounds.minY;
               const x2 = pb.x - bounds.minX;
               const y2 = pb.y - bounds.minY;
               const dist = Math.hypot(x2 - x1, y2 - y1);
-              const sag = Math.min(80, dist * 0.15);
+              const themeSag =
+                state.theme === "cork" ? 0.18 : state.theme === "white" ? 0.04 : 0;
+              const sagFactor = c.sag ?? themeSag;
+              const sag = Math.min(140, dist * sagFactor);
               const mx = (x1 + x2) / 2;
-              const my =
-                (y1 + y2) / 2 +
-                (state.theme === "cork" ? sag : state.theme === "cyber" ? 0 : 12);
+              const my = (y1 + y2) / 2 + sag;
               const isSel = selectedConn === c.id;
               const stroke = colorVar(c.color);
               const d = `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;

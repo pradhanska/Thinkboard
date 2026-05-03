@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import type { BoardItem } from "@/lib/softboard-types";
+import type { BoardItem, Stroke } from "@/lib/softboard-types";
 import { Trash2, Link2, FileText, Music } from "lucide-react";
 import pinRed from "@/assets/pin-red.png";
+import { SketchCanvas } from "./SketchCanvas";
 
 interface Props {
   item: BoardItem;
@@ -171,6 +172,18 @@ export function BoardItemView({
             className="handwritten flex-1 resize-none bg-transparent outline-none text-lg leading-snug"
             placeholder="Type your note..."
           />
+        )}
+
+        {item.kind === "sketch" && (
+          <div className="flex-1 w-full h-full" onPointerDown={stopIfNotConnect}>
+            <SketchCanvas
+              width={item.w}
+              height={item.h}
+              strokes={item.strokes ?? []}
+              onChange={(strokes: Stroke[]) => onUpdate({ strokes })}
+              zoom={zoom}
+            />
+          </div>
         )}
 
         {item.kind === "image" && item.dataUrl && (

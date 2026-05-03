@@ -1,6 +1,12 @@
-export type ItemKind = "note" | "image" | "audio" | "document";
+export type ItemKind = "note" | "image" | "audio" | "document" | "sketch";
 
 export type StringColor = "red" | "blue" | "green" | "yellow" | "white";
+
+export interface Stroke {
+  color: StringColor;
+  width: number;
+  points: number[]; // flat [x,y,x,y,...] in item-local coords
+}
 
 export interface BoardItem {
   id: string;
@@ -17,6 +23,8 @@ export interface BoardItem {
   fileName?: string;
   mimeType?: string;
   rotation?: number;
+  // sketch
+  strokes?: Stroke[];
 }
 
 export interface Connection {
@@ -24,6 +32,8 @@ export interface Connection {
   from: string;
   to: string;
   color: StringColor;
+  /** 0 = taut/straight, 1 = very loose. If undefined uses theme default. */
+  sag?: number;
 }
 
 export type ThemeName = "cork" | "white" | "cyber";
