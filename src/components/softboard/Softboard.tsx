@@ -93,6 +93,9 @@ export function Softboard() {
     }
   };
   const onPointerMove = (e: React.PointerEvent) => {
+    if (connectMode && connectFrom) {
+      setCursorWorld(screenToWorld(e.clientX, e.clientY));
+    }
     if (!isPanning.current) return;
     const dx = e.clientX - panStart.current.x;
     const dy = e.clientY - panStart.current.y;
