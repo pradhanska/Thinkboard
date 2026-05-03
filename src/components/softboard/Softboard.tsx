@@ -167,6 +167,7 @@ export function Softboard() {
       }
       if (connectFrom === id) {
         setConnectFrom(null);
+        setCursorWorld(null);
         return;
       }
       const conn: Connection = {
@@ -177,6 +178,7 @@ export function Softboard() {
       };
       setState((s) => ({ ...s, connections: [...s.connections, conn] }));
       setConnectFrom(null);
+      setCursorWorld(null);
     },
     [connectMode, connectFrom, activeStringColor]
   );
