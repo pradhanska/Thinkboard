@@ -245,12 +245,27 @@ export function Softboard() {
   const svgW = bounds.maxX - bounds.minX;
   const svgH = bounds.maxY - bounds.minY;
 
-  const itemCenter = (it: BoardItem) => ({
+  // Anchor at the top-center pin of the card
+  const pinAnchor = (it: BoardItem) => ({
     x: it.x + it.w / 2,
-    y: it.y + it.h / 2,
+    y: it.y - 2,
   });
 
   const onSetTheme = (t: ThemeName) => setState((s) => ({ ...s, theme: t }));
+  const onAddSketch = () =>
+    addItem({ kind: "sketch", w: 320, h: 240, strokes: [] });
+
+  const updateConnection = (id: string, patch: Partial<Connection>) =>
+    setState((s) => ({
+      ...s,
+      connections: s.connections.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }));
+  const deleteConnection = (id: string) => {
+    setState((s) => ({ ...s, connections: s.connections.filter((c) => c.id !== id) }));
+    setSelectedConn(null);
+  };
+
+  const selected = state.connections.find((c) => c.id === selectedConn) ?? null;
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -261,6 +276,7 @@ export function Softboard() {
         onAddImage={() => pickFiles("image/*", (fl) => onAddFiles(fl, "image"))}
         onAddAudio={() => pickFiles("audio/*", (fl) => onAddFiles(fl, "audio"))}
         onAddDocument={() => pickFiles("*/*", (fl) => onAddFiles(fl, "document"))}
+        onAddSketch={onAddSketch}
         onExport={onExport}
         onImport={(f) => onImport(f)}
         onClear={onClear}
@@ -275,6 +291,15 @@ export function Softboard() {
         onZoomReset={() => setState((s) => ({ ...s, zoom: 1, pan: { x: 0, y: 0 } }))}
         itemCount={state.items.length}
       />
+
+      {selected && (
+        <ThreadControls
+          conn={selected}
+          onChange={(patch) => updateConnection(selected.id, patch)}
+          onDelete={() => deleteConnection(selected.id)}
+          onClose={() => setSelectedConn(null)}
+        />
+      )}
 
       <div
         ref={boardRef}
