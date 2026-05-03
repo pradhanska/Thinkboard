@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import type { BoardItem } from "@/lib/softboard-types";
+import type { BoardItem, Stroke } from "@/lib/softboard-types";
 import { Trash2, Link2, FileText, Music } from "lucide-react";
 import pinRed from "@/assets/pin-red.png";
+import { SketchCanvas } from "./SketchCanvas";
 
 interface Props {
   item: BoardItem;
