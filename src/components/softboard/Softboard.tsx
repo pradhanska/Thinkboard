@@ -18,6 +18,7 @@ import {
 } from "@/lib/softboard-storage";
 import { BoardItemView } from "./BoardItem";
 import { Toolbar } from "./Toolbar";
+import { ThreadControls } from "./ThreadControls";
 import { toast } from "sonner";
 
 function uid() {
