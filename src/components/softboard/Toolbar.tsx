@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import {
+  type BoardDrawTool,
   STRING_COLORS,
   colorVar,
   type StringColor,
@@ -17,6 +18,8 @@ import {
   Palette,
   ChevronDown,
   Pencil,
+  PenLine,
+  Undo2,
 } from "lucide-react";
 
 interface Props {
@@ -32,6 +35,16 @@ interface Props {
   onClear: () => void;
   connectMode: boolean;
   onToggleConnect: () => void;
+  drawMode: boolean;
+  onToggleDraw: () => void;
+  boardTool: BoardDrawTool;
+  onSetBoardTool: (tool: BoardDrawTool) => void;
+  boardColor: string;
+  onSetBoardColor: (color: string) => void;
+  boardWidth: number;
+  onSetBoardWidth: (width: number) => void;
+  onUndoBoardStroke: () => void;
+  canDraw: boolean;
   activeStringColor: StringColor;
   onSetStringColor: (c: StringColor) => void;
   zoom: number;
@@ -46,7 +59,9 @@ export function Toolbar(p: Props) {
 
   const themes: { id: ThemeName; label: string; swatch: string }[] = [
     { id: "cork", label: "Cork", swatch: "linear-gradient(135deg,#b07a44,#7d4f23)" },
+    { id: "wood", label: "Wood", swatch: "linear-gradient(135deg,#8d6746,#4f2f1e)" },
     { id: "white", label: "Paper", swatch: "linear-gradient(135deg,#ffffff,#e8eaf0)" },
+    { id: "blackboard", label: "Blackboard", swatch: "linear-gradient(135deg,#23302a,#0f1714)" },
     { id: "cyber", label: "Cyber", swatch: "linear-gradient(135deg,#00e5ff,#a855f7)" },
   ];
   const currentTheme = themes.find((t) => t.id === p.theme)!;
@@ -82,6 +97,48 @@ export function Toolbar(p: Props) {
         <Link2 size={13} />
         Link
       </button>
+      {p.canDraw && (
+        <>
+          <button
+            onClick={p.onToggleDraw}
+            title="Write on board"
+            className={`flex items-center gap-1.5 h-7 rounded-full px-2.5 text-[11px] font-medium transition ${
+              p.drawMode ? "bg-foreground text-background" : "hover:bg-foreground/10"
+            }`}
+          >
+            <PenLine size={13} />
+            {p.boardTool === "chalk" ? "Chalk" : "Marker"}
+          </button>
+          {p.drawMode && (
+            <>
+              <input
+                type="color"
+                value={p.boardColor}
+                onChange={(e) => p.onSetBoardColor(e.target.value)}
+                title="Ink color"
+                className="h-6 w-7 rounded border border-foreground/20 bg-transparent p-0.5"
+              />
+              <input
+                type="range"
+                min={1}
+                max={12}
+                step={0.5}
+                value={p.boardWidth}
+                onChange={(e) => p.onSetBoardWidth(Number.parseFloat(e.target.value))}
+                className="w-14 accent-foreground"
+                title="Stroke width"
+              />
+              <button
+                onClick={p.onUndoBoardStroke}
+                className="h-7 w-7 rounded-full flex items-center justify-center hover:bg-foreground/10 transition"
+                title="Undo writing"
+              >
+                <Undo2 size={13} />
+              </button>
+            </>
+          )}
+        </>
+      )}
 
       {/* String color popover */}
       <div className="relative">

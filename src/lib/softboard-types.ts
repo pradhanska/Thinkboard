@@ -36,13 +36,24 @@ export interface Connection {
   sag?: number;
 }
 
-export type ThemeName = "cork" | "white" | "cyber";
+export type ThemeName = "cork" | "wood" | "white" | "blackboard" | "cyber";
+
+export type BoardDrawTool = "pen" | "marker" | "chalk";
+
+export interface BoardStroke {
+  id: string;
+  tool: BoardDrawTool;
+  color: string;
+  width: number;
+  points: number[]; // world-space [x,y,x,y,...]
+}
 
 export interface SoftboardState {
   version: 1;
   theme: ThemeName;
   items: BoardItem[];
   connections: Connection[];
+  boardStrokes: BoardStroke[];
   pan: { x: number; y: number };
   zoom: number;
 }
@@ -52,6 +63,7 @@ export const DEFAULT_STATE: SoftboardState = {
   theme: "cork",
   items: [],
   connections: [],
+  boardStrokes: [],
   pan: { x: 0, y: 0 },
   zoom: 1,
 };

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
+  type BoardDrawTool,
+  type BoardStroke,
   DEFAULT_STATE,
   colorVar,
   type BoardItem,
@@ -33,11 +35,18 @@ export function Softboard() {
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
   const [cursorWorld, setCursorWorld] = useState<{ x: number; y: number } | null>(null);
   const [selectedConn, setSelectedConn] = useState<string | null>(null);
+  const [drawMode, setDrawMode] = useState(false);
+  const [boardTool, setBoardTool] = useState<BoardDrawTool>("pen");
+  const [boardColor, setBoardColor] = useState("#f2f2f2");
+  const [boardWidth, setBoardWidth] = useState(4);
+  const [draftStroke, setDraftStroke] = useState<BoardStroke | null>(null);
 
   const boardRef = useRef<HTMLDivElement>(null);
   const isPanning = useRef(false);
+  const isDrawingBoard = useRef(false);
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const itemRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const draftStrokeRef = useRef<BoardStroke | null>(null);
   const [, force] = useState(0);
   const rerender = useCallback(() => force((n) => n + 1), []);
 
@@ -53,11 +62,33 @@ export function Softboard() {
     saveState(state);
   }, [state, hydrated]);
 
+  useEffect(() => {
+    draftStrokeRef.current = draftStroke;
+  }, [draftStroke]);
+
   // theme class on <html>
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove("theme-cork", "theme-white", "theme-cyber");
+    root.classList.remove("theme-cork", "theme-wood", "theme-white", "theme-blackboard", "theme-cyber");
     root.classList.add(`theme-${state.theme}`);
+  }, [state.theme]);
+
+  useEffect(() => {
+    if (state.theme === "blackboard") {
+      setBoardTool("chalk");
+      setBoardColor("#f2f2f2");
+      setBoardWidth(4.5);
+      return;
+    }
+    if (state.theme === "white") {
+      setBoardTool("marker");
+      setBoardColor("#1f4ed8");
+      setBoardWidth(3.5);
+      return;
+    }
+    setBoardTool("pen");
+    setBoardColor("#9b111e");
+    setBoardWidth(3);
   }, [state.theme]);
 
   const screenToWorld = useCallback(
@@ -76,6 +107,19 @@ export function Softboard() {
   const onPointerDown = (e: React.PointerEvent) => {
     if (e.target !== e.currentTarget) return;
     setSelectedConn(null);
+    if (drawMode && e.button === 0) {
+      const p = screenToWorld(e.clientX, e.clientY);
+      isDrawingBoard.current = true;
+      setDraftStroke({
+        id: uid(),
+        tool: boardTool,
+        color: boardColor,
+        width: boardWidth,
+        points: [p.x, p.y],
+      });
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      return;
+    }
     if (connectMode) {
       // Clicking empty board in connect mode resets the in-progress connection.
       setConnectFrom(null);
@@ -93,6 +137,11 @@ export function Softboard() {
     }
   };
   const onPointerMove = (e: React.PointerEvent) => {
+    if (isDrawingBoard.current) {
+      const p = screenToWorld(e.clientX, e.clientY);
+      setDraftStroke((s) => (s ? { ...s, points: [...s.points, p.x, p.y] } : s));
+      return;
+    }
     if (connectMode && connectFrom) {
       setCursorWorld(screenToWorld(e.clientX, e.clientY));
     }
@@ -105,6 +154,16 @@ export function Softboard() {
     }));
   };
   const onPointerUp = (e: React.PointerEvent) => {
+    if (isDrawingBoard.current) {
+      isDrawingBoard.current = false;
+      const completed = draftStrokeRef.current;
+      setState((s) =>
+        completed && completed.points.length >= 4
+          ? { ...s, boardStrokes: [...s.boardStrokes, completed] }
+          : s
+      );
+      setDraftStroke(null);
+    }
     isPanning.current = false;
     try {
       (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
@@ -160,7 +219,12 @@ export function Softboard() {
 
   const handleItemClickConnect = useCallback(
     (id: string) => {
-      if (!connectMode) return;
+      if (!connectMode) {
+        setConnectMode(true);
+        setConnectFrom(id);
+        setCursorWorld(null);
+        return;
+      }
       if (!connectFrom) {
         setConnectFrom(id);
         return;
@@ -176,11 +240,22 @@ export function Softboard() {
         to: id,
         color: activeStringColor,
       };
+      const alreadyLinked = state.connections.some(
+        (c) =>
+          (c.from === conn.from && c.to === conn.to) ||
+          (c.from === conn.to && c.to === conn.from)
+      );
+      if (alreadyLinked) {
+        toast("Those notes are already linked");
+        setConnectFrom(null);
+        setCursorWorld(null);
+        return;
+      }
       setState((s) => ({ ...s, connections: [...s.connections, conn] }));
       setConnectFrom(null);
       setCursorWorld(null);
     },
-    [connectMode, connectFrom, activeStringColor]
+    [connectMode, connectFrom, activeStringColor, state.connections]
   );
 
   // File adders
@@ -257,10 +332,16 @@ export function Softboard() {
   const pinAnchor = (it: BoardItem) => {
     const cx = it.x + it.w / 2;
     const cy = it.y + it.h / 2;
+    const pinSize =
+      state.theme === "cork" || state.theme === "wood"
+        ? 26
+        : state.theme === "white" || state.theme === "blackboard"
+          ? 14
+          : 12;
     // Pin sits 10px above the top edge, centered horizontally.
     // Local offset from card center, before rotation:
     const lx = 0;
-    const ly = -(it.h / 2) - 10;
+    const ly = -(it.h / 2) + (-10 + pinSize / 2);
     const rad = ((it.rotation ?? 0) * Math.PI) / 180;
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
@@ -285,6 +366,43 @@ export function Softboard() {
   };
 
   const selected = state.connections.find((c) => c.id === selectedConn) ?? null;
+  const renderBoardStroke = (s: BoardStroke, key: string) => {
+    if (s.points.length < 2) return null;
+    let d = `M ${s.points[0] - bounds.minX} ${s.points[1] - bounds.minY}`;
+    for (let i = 2; i < s.points.length; i += 2) {
+      d += ` L ${s.points[i] - bounds.minX} ${s.points[i + 1] - bounds.minY}`;
+    }
+    const cls =
+      s.tool === "chalk"
+        ? "board-draw board-draw-chalk"
+        : s.tool === "marker"
+          ? "board-draw board-draw-marker"
+          : "board-draw board-draw-pen";
+    return (
+      <path
+        key={key}
+        d={d}
+        className={cls}
+        stroke={s.color}
+        strokeWidth={s.width}
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    );
+  };
+  const buildThreadPath = (x1: number, y1: number, x2: number, y2: number, sag: number) => {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const dist = Math.hypot(dx, dy);
+    const nx = dist > 0 ? -dy / dist : 0;
+    const ny = dist > 0 ? dx / dist : 1;
+    const cp1x = x1 + dx * 0.33 + nx * sag * 0.15;
+    const cp1y = y1 + dy * 0.33 + sag;
+    const cp2x = x1 + dx * 0.66 - nx * sag * 0.15;
+    const cp2y = y1 + dy * 0.66 + sag;
+    return `M ${x1} ${y1} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${x2} ${y2}`;
+  };
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -304,6 +422,18 @@ export function Softboard() {
           setConnectMode((v) => !v);
           setConnectFrom(null);
         }}
+        drawMode={drawMode}
+        onToggleDraw={() => setDrawMode((v) => !v)}
+        boardTool={boardTool}
+        onSetBoardTool={setBoardTool}
+        boardColor={boardColor}
+        onSetBoardColor={setBoardColor}
+        boardWidth={boardWidth}
+        onSetBoardWidth={setBoardWidth}
+        onUndoBoardStroke={() =>
+          setState((s) => ({ ...s, boardStrokes: s.boardStrokes.slice(0, -1) }))
+        }
+        canDraw={state.theme === "white" || state.theme === "blackboard"}
         activeStringColor={activeStringColor}
         onSetStringColor={setActiveStringColor}
         zoom={state.zoom}
@@ -322,7 +452,9 @@ export function Softboard() {
 
       <div
         ref={boardRef}
-        className="board-surface absolute inset-0 cursor-grab active:cursor-grabbing select-none"
+        className={`board-surface absolute inset-0 select-none ${
+          drawMode ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"
+        }`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -351,6 +483,8 @@ export function Softboard() {
               overflow: "visible",
             }}
           >
+            {state.boardStrokes.map((s) => renderBoardStroke(s, s.id))}
+            {draftStroke ? renderBoardStroke(draftStroke, "draft-stroke") : null}
             {state.connections.map((c) => {
               const a = state.items.find((i) => i.id === c.from);
               const b = state.items.find((i) => i.id === c.to);
@@ -363,14 +497,20 @@ export function Softboard() {
               const y2 = pb.y - bounds.minY;
               const dist = Math.hypot(x2 - x1, y2 - y1);
               const themeSag =
-                state.theme === "cork" ? 0.18 : state.theme === "white" ? 0.04 : 0;
+                state.theme === "cork" || state.theme === "wood"
+                  ? 0.18
+                  : state.theme === "white"
+                    ? 0.04
+                    : state.theme === "blackboard"
+                      ? 0.08
+                      : 0;
               const sagFactor = c.sag ?? themeSag;
               const sag = Math.min(140, dist * sagFactor);
               const mx = (x1 + x2) / 2;
               const my = (y1 + y2) / 2 + sag;
               const isSel = selectedConn === c.id;
               const stroke = colorVar(c.color);
-              const d = `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;
+              const d = buildThreadPath(x1, y1, x2, y2, sag);
               const baseW = isSel ? 5 : 3;
               const onClick = (e: React.MouseEvent) => {
                 e.stopPropagation();
@@ -378,7 +518,15 @@ export function Softboard() {
               };
               return (
                 <g key={c.id} style={{ pointerEvents: "auto", color: stroke }}>
-                  {state.theme === "cork" && (
+                  <path
+                    d={d}
+                    stroke="transparent"
+                    strokeWidth={18}
+                    fill="none"
+                    style={{ cursor: "pointer" }}
+                    onClick={onClick}
+                  />
+                  {(state.theme === "cork" || state.theme === "wood") && (
                     <>
                       <path
                         className="connection-string-base"
@@ -398,6 +546,8 @@ export function Softboard() {
                         style={{ cursor: "pointer" }}
                         onClick={onClick}
                       />
+                      <circle cx={x1} cy={y1} r={2.7} fill={stroke} opacity={0.9} />
+                      <circle cx={x2} cy={y2} r={2.7} fill={stroke} opacity={0.9} />
                     </>
                   )}
                   {state.theme === "white" && (
@@ -408,6 +558,17 @@ export function Softboard() {
                       strokeWidth={baseW + 0.5}
                       fill="none"
                       style={{ cursor: "pointer" }}
+                      onClick={onClick}
+                    />
+                  )}
+                  {state.theme === "blackboard" && (
+                    <path
+                      className="connection-string"
+                      d={d}
+                      stroke={stroke}
+                      strokeWidth={baseW + 0.8}
+                      fill="none"
+                      style={{ cursor: "pointer", opacity: 0.9 }}
                       onClick={onClick}
                     />
                   )}
@@ -470,7 +631,7 @@ export function Softboard() {
               const y2 = cursorWorld.y - bounds.minY;
               return (
                 <path
-                  d={`M ${x1} ${y1} L ${x2} ${y2}`}
+                  d={buildThreadPath(x1, y1, x2, y2, Math.min(90, Math.hypot(x2 - x1, y2 - y1) * 0.2))}
                   stroke={colorVar(activeStringColor)}
                   strokeWidth={2.5}
                   strokeDasharray="6 6"
