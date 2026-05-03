@@ -174,6 +174,18 @@ export function BoardItemView({
           />
         )}
 
+        {item.kind === "sketch" && (
+          <div className="flex-1 w-full h-full" onPointerDown={stopIfNotConnect}>
+            <SketchCanvas
+              width={item.w}
+              height={item.h}
+              strokes={item.strokes ?? []}
+              onChange={(strokes: Stroke[]) => onUpdate({ strokes })}
+              zoom={zoom}
+            />
+          </div>
+        )}
+
         {item.kind === "image" && item.dataUrl && (
           <div className="flex-1 flex items-center justify-center overflow-hidden">
             <img
